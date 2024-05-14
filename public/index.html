@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Analysis</title>
+  <title>File Upload</title>
 </head>
 <body>
-  <h1>Carica un file da analizzare</h1>
+  <h1>Carica un file da analizzare o inserisci un URL</h1>
   <form id="uploadForm" enctype="multipart/form-data">
     <input type="file" name="file" id="fileInput">
+    <input type="text" name="url" id="urlInput" placeholder="Inserisci l'URL">
     <button type="submit">Analizza file</button>
   </form>
 
@@ -16,23 +17,25 @@
 
   <script>
     document.getElementById('uploadForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-
+      event.preventDefault(); // Evita il comportamento predefinito di invio del modulo
+      
       var formData = new FormData();
       var fileInput = document.getElementById('fileInput').files[0];
-      formData.append('file', fileInput);
+      var urlInput = document.getElementById('urlInput').value;
+      if (fileInput) {
+        formData.append('file', fileInput);
+      }
+      if (urlInput) {
+        formData.append('url', urlInput);
+      }
 
       fetch('/analyze', {
         method: 'POST',
         body: formData
       })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Errore nella richiesta: ' + response.statusText);
-        }
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
+        console.log(data);
         var resultDiv = document.getElementById('result');
         resultDiv.innerHTML = `
           <p>Numero di parole nel file: ${data.wordCount}</p>
