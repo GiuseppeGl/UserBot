@@ -7,11 +7,60 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Definizione delle classi e della factory method
+
+// Interfaccia FileLoader
+class FileLoader {
+  loadFile(source) {
+    throw new Error('Metodo non implementato');
+  }
+}
+
+// Classe Concrete LocalFileLoader
+class LocalFileLoader extends FileLoader {
+  loadFile(filePath) {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filePath, 'utf8', (err, data) => {
+        if (err) {
+          reject('Errore durante la lettura del file locale');
+        } else {
+          resolve(data);
+        }
+      });
+    });
+  }
+}
+
+// Classe Concrete RemoteFileLoader
+class RemoteFileLoader extends FileLoader {
+  loadFile(url) {
+    return new Promise((resolve, reject) => {
+      axios.get(url)
+        .then(response => {
+          resolve(response.data);
+        })
+        .catch(error => {
+          reject('Errore durante il caricamento del file remoto');
+        });
+    });
+  }
+}
+
+// Factory Method per creare l'oggetto FileLoader appropriato in base alla sorgente
+function createFileLoader(source) {
+  if (source.startsWith('http://') || source.startsWith('https://')) {
+    return new RemoteFileLoader();
+  } else {
+    return new LocalFileLoader();
+  }
+}
+
 // Configurazione di Multer per gestire il caricamento del file
 const upload = multer({ dest: 'uploads/' });
 
 app.use(express.static('public'));
 
+// Gestore della richiesta POST '/analyze'
 app.post('/analyze', upload.single('file'), async (req, res) => {
   let data;
   
