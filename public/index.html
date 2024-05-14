@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Analysis</title>
+</head>
+<body>
+  <h1>Carica un file da analizzare</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="file" id="fileInput">
+    <button type="submit">Analizza file</button>
+  </form>
+
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      var formData = new FormData();
+      var fileInput = document.getElementById('fileInput').files[0];
+      formData.append('file', fileInput);
+
+      fetch('/analyze', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Errore nella richiesta: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        var resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+          <p>Numero di parole nel file: ${data.wordCount}</p>
+          <p>Numero di lettere nel file: ${data.letterCount}</p>
+          <p>Numero di spazi nel file: ${data.spaceCount}</p>
+          <p>Parole ripetute più di 10 volte:</p>
+          <ul>
+            ${data.repeatedWords.map(word => `<li>${word[0]} (${word[1]} volte)</li>`).join('')}
+          </ul>
+        `;
+      })
+      .catch(error => {
+        console.error('Errore durante la richiesta di analisi del file:', error);
+      });
+    });
+  </script>
+</body>
+</html>
